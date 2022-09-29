@@ -1,15 +1,12 @@
-const controller = require()
+const express = require('express');
+const route = express.route();
+
+const urlController = require("../controller/urlController");
 
 
+route.post("/url/shorten",urlController.createUrl)
 
-
-
-
-
-
-
-
-
+route.get("/:urlCode",urlController.getUrl)
 
 
 

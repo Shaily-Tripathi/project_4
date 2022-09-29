@@ -1,4 +1,4 @@
-const mongoose = require(mongoose);
+const mongoose = require("mongoose");
 
 const urlSchema = new mongoose.Schema({
     urlCode : {
@@ -17,6 +17,6 @@ const urlSchema = new mongoose.Schema({
         require : true,
         unique : true
     }
-},{timestamp : ture});
+},{timestamp : true});
 
 module.exports = mongoose.model("urlList",urlSchema);
