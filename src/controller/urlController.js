@@ -1,27 +1,89 @@
-const shortUrl = require("node-url-shortener");
-const urlmodel = require("../model/urlModel")
-const {isValid,isValidUrl} =("../validation/validation.js")
 
 
-const createUrl= async function(req,res){
+const urlModel = require("../model/urlModel");
+const shortid = require('shortid')
+
+
+
+const isValid = function (value) {
+    if (typeof value !== "string" || value.trim().length == 0) {
+        return false
+    }
+    return true
+};
+
+
+let isValidUrl = (value) => {
+    let urlRegex = /^(?:([A-Za-z]+):)?(\/{0,3})([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#]*))?(?:\?([^#]*))?(?:#(.*))?$/;
+    return urlRegex.test(value)
+
+}
+
+const createUrl = async function (req, res) {
     try {
-        const {longUrl} = req.body;
-        
-        if(Object.keys(longUrl).length == 0){
-            return res.status(400).send({status:false,message:"please provide data"})
+        let body = req.body;
+        if ((Object.keys(body)).length == 0) {
+            return res.status(400).send({ status: false, message: "please provide data" })
         }
-    if(!isValid(longUrl)){
-        return res.status(400).send({status:false,message:"please provide Url and url should be string"})
-    }
-    if (!isValidUrl(longUrl)){
-        return res.status(400).send({status:false,message:"please provide valid Url"})  
-    }
-    let short = shortUrl.short(longUrl, function (err, url) {
-        if(err) return res.status(400).send({status:false,message:err.message});
-    });
+        let { longUrl } = body
+        
+
+        
+        if (!isValid(longUrl)) {
+            return res.status(400).send({ status: false, message: "please provide Url and url should be string" })
+        }
+
+        if (!isValidUrl(longUrl)) {
+            return res.status(400).send({ status: false, message: "please provide valid Url" })
+        }
+
+        let short = shortid.generate(longUrl)
+
+
+        if (!short) {
+            return res.status(400).send({ status: false, msg: short })
+        }
+        
+
+        let obj = { longUrl, shortUrl: `http://localhost:3000/${short}` }
+        obj.urlCode =  short.toLowerCase()
+        console.log(obj)
+
+        let Data = await urlModel.create(obj)
+        return res.status(201).send({ status: true, data: obj })
 
 
     } catch (error) {
-        
+        return res.status(500).send({ status: false, msg: error.message })
     }
 }
+
+
+// ### GET /:urlCode
+// - Redirect to the original URL corresponding
+// - Use a valid HTTP status code meant for a redirection scenario.
+// - Return a suitable error for a url not found
+// - Return HTTP status 400 for an invalid request
+
+
+const getUrl = async function (req, res) {
+    let paramId = req.params.urlCode
+     
+
+    paramId = paramId.toLowerCase()
+
+    if (!isValid(paramId)){
+        return res.status(400).send({ status: false, msg: "Please Enter Valid UrlCode"}) 
+    }
+
+
+    let redirect = await urlModel.findOne({urlCode:paramId}).select({longUrl:true,_id:false})
+    if(!redirect){
+        return res.status(404).send({ status: false, msg: "No Url Found"})
+    }
+    return res.status(302).send({ status: true, msg:redirect })
+
+
+}     
+
+module.exports = {createUrl ,getUrl}

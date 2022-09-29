@@ -3,20 +3,20 @@ const mongoose = require("mongoose");
 const urlSchema = new mongoose.Schema({
     urlCode : {
         type : String,
-        require : true,
+        required : true,
         unique : true,
-        lowercase : true,
-        trim : true
+        lowercase : true
+        
     },
     longUrl : {
         type : String,
-        require :  true,
-    },
+        required :  true
+    },        
     shortUrl : {
         type : String,
-        require : true,
+        required : true,
         unique : true
     }
-},{timestamp : true});
+},{timestamps : true});
 
 module.exports = mongoose.model("urlList",urlSchema);

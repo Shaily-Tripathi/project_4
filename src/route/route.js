@@ -1,5 +1,5 @@
 const express = require('express');
-const route = express.route();
+const route = express.Router();
 
 const urlController = require("../controller/urlController");
 
@@ -10,10 +10,7 @@ route.get("/:urlCode",urlController.getUrl)
 
 
 
-router.all("/*", function (req, res) {
-    res.status(400).send({
-        status: false,
-        message: "The api you request is not available"
-    })
+route.all("/*", function (req, res) {
+    res.status(400).send({status: false,message: "The api you request is not available"})
 })
 module.exports = route;
