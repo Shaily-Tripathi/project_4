@@ -6,5 +6,23 @@
     "node-url-shortener": "^2.0.3",
     "nodemon": "^2.0.20",
     "valid-url": "^1.0.9"
-  }
+  },
+  "name": "url-shortner-project-4",
+  "description": "URL shortening is used to create shorter aliases for long URLs. We call these shortened aliases “short links.” Users are redirected to the original URL when they hit these short links. Short links save a lot of space when displayed, printed, messaged, or tweeted. Additionally, users are less likely to mistype shorter URLs.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RakibAlli/url-Shortner.git"
+  },
+  "author": "Pawan ,Shaily ,Nisha ,Rakib",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RakibAlli/url-Shortner/issues"
+  },
+  "homepage": "https://github.com/RakibAlli/url-Shortner#readme"
 }
