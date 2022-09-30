@@ -1,10 +1,8 @@
-
-
 const urlModel = require("../model/urlModel");
 const shortid = require('shortid')
 
 
-
+//==================================================Validation===========================================================
 const isValid = function (value) {
     if (typeof value !== "string" || value.trim().length == 0) {
         return false
@@ -18,7 +16,7 @@ let isValidUrl = (value) => {
     return urlRegex.test(value)
 
 }
-
+//===============================================short Url=================================================================//
 const createUrl = async function (req, res) {
     try {
         let body = req.body;
@@ -36,6 +34,9 @@ const createUrl = async function (req, res) {
         if (!isValidUrl(longUrl)) {
             return res.status(400).send({ status: false, message: "please provide valid Url" })
         }
+        
+        let existingLongUrl = await urlModel.findOne({longUrl: longUrl})
+        if(existingLongUrl) {  return res.status(400).send({ status: false, message: "longUrl already exists" })}
 
         let short = shortid.generate(longUrl)
 
@@ -47,7 +48,8 @@ const createUrl = async function (req, res) {
 
         let obj = { longUrl, shortUrl: `http://localhost:3000/${short}` }
         obj.urlCode =  short.toLowerCase()
-        console.log(obj)
+      //  console.log(obj)
+ 
 
         let Data = await urlModel.create(obj)
         return res.status(201).send({ status: true, data: obj })
@@ -58,7 +60,7 @@ const createUrl = async function (req, res) {
     }
 }
 
-
+//======================================================get url===========================================================
 // ### GET /:urlCode
 // - Redirect to the original URL corresponding
 // - Use a valid HTTP status code meant for a redirection scenario.
@@ -81,7 +83,7 @@ const getUrl = async function (req, res) {
     if(!redirect){
         return res.status(404).send({ status: false, msg: "No Url Found"})
     }
-    return res.status(302).send({ status: true, msg:redirect })
+    return res.status(302).redirect(redirect.longUrl)
 
 
 }     
