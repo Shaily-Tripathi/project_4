@@ -25,7 +25,7 @@ redisClient.on("connect", async function () {
 
 //Connection setup for redis
 
-const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);
+const SET_ASYNC = promisify(redisClient.SET).bind(redisClient)
 const GET_ASYNC = promisify(redisClient.GET).bind(redisClient)
 
 
@@ -39,7 +39,10 @@ const isValid = function (value) {
 
 
 let isValidUrl = (value) => {
-    let urlRegex = /^(?:([A-Za-z]+):)?(\/{0,3})([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#]*))?(?:\?([^#]*))?(?:#(.*))?$/;
+    let urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)/
+
+
+        ;
     return urlRegex.test(value)
 
 }
@@ -53,6 +56,10 @@ const createUrl = async function (req, res) {
         }
         let { longUrl } = body
 
+        let longUrlExist = await urlModel.findOne({ longUrl: longUrl }).select({ createdAt: 0, updatedAt: 0, __v: 0, _id: 0 })
+        if (longUrlExist) {
+            return res.status(400).send({ status: false, message: "longUrl already exists", data: longUrlExist })
+        }
 
 
         if (!isValid(longUrl)) {
@@ -63,10 +70,7 @@ const createUrl = async function (req, res) {
             return res.status(400).send({ status: false, message: "please provide valid Url" })
         }
 
-        let existingLongUrl = await urlModel.findOne({ longUrl: longUrl })
-        if (existingLongUrl) {
-            return res.status(400).send({ status: false, message: "longUrl already exists" })
-        }
+
 
         let short = shortid.generate(longUrl)
 
@@ -79,11 +83,18 @@ const createUrl = async function (req, res) {
         let obj = { longUrl, shortUrl: `http://localhost:3000/${short}` }
         obj.urlCode = short.toLowerCase()
 
+        let check_in_cache = await GET_ASYNC(`${obj}`)
+        if (check_in_cache) {
+            return res.status(201).send({ status: true, data: obj })
+        } else {
+            let setUrlCode = obj.urlCode
+            let setInCache = await SET_ASYNC(`${setUrlCode}`, JSON.stringify(obj))
+
+        }
 
 
         let Data = await urlModel.create(obj)
         return res.status(201).send({ status: true, data: obj })
-
 
     } catch (error) {
         return res.status(500).send({ status: false, msg: error.message })
@@ -91,55 +102,34 @@ const createUrl = async function (req, res) {
 }
 
 //======================================================get url===========================================================
-// ### GET /:urlCode
-// - Redirect to the original URL corresponding
-// - Use a valid HTTP status code meant for a redirection scenario.
-// - Return a suitable error for a url not found
-// - Return HTTP status 400 for an invalid request
 
 
-// const getUrl = async function (req, res) {
-//      const fetchAuthorProfile = async function (req, res) {
-//         let urlcode = req.params.urlCode
-//         let cahcedProfileData = await GET_ASYNC(`${urlcode}`)
-
-//         if (cahcedProfileData) {
-//             const urldata= JSON.parse(cahcedProfileData)
-            
-//             return res.send(cahcedProfileData.longUrl)
-//         } else {
-//             let profile = await urlModel.findOne(urlcode);
-//             await SET_ASYNC(`${urlcode}`, JSON.stringify(profile))
-//             console.log("done")
-//             res.send({ data: profile });
-//         }
-//         return res.status(302).redirect(redirect.longUrl)
-   
-const getUrl= async function(req,res){
-    try{
+const getUrl = async function (req, res) {
+    try {
         let urlCode = req.params.urlCode
         urlCode = urlCode.toLowerCase()
 
-        if (!isValid(urlCode)){
-            return res.status(400).send({ status: false, msg: "Please Enter Valid UrlCode"}) 
+        if (!isValid(urlCode)) {
+            return res.status(400).send({ status: false, msg: "Please Enter Valid UrlCode" })
         }
         let catchUrlData = await GET_ASYNC(`${urlCode}`)
-        if(catchUrlData){
+        if (catchUrlData) {
             const urlData = JSON.parse(catchUrlData)
             return res.status(302).redirect(urlData.longUrl)
-        }else{
-            let findUrlCode = await urlModel.findOne({urlCode:urlCode}).select({longUrl:true,_id:false})
-            if(!findUrlCode){
-                return res.status(404).send({status:false,msg:"No Url Found"})
+        } else {
+            let findUrlCode = await urlModel.findOne({ urlCode: urlCode }).select({ longUrl: true, _id: false })
+            if (!findUrlCode) {
+                return res.status(404).send({ status: false, msg: "No URL Found OR Url is Incorrect" })
             }
-            await SET_ASYNC(`${urlCode}`,JSON.stringify(findUrlCode))
+
+            await SET_ASYNC(`${urlCode}`, JSON.stringify(findUrlCode))
             return res.status(302).redirect(findUrlCode.longUrl)
         }
 
-    }catch(err){
-        return res.status(500).send({status:false,msg:err.message})
-            
+    } catch (err) {
+        return res.status(500).send({ status: false, msg: err.message })
+
     }
 
 }
-module.exports = { createUrl,getUrl }
+module.exports = { createUrl, getUrl }
