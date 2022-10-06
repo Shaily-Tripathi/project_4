@@ -58,7 +58,7 @@ const createUrl = async function (req, res) {
 
         let longUrlExist = await urlModel.findOne({ longUrl: longUrl }).select({ createdAt: 0, updatedAt: 0, __v: 0, _id: 0 })
         if (longUrlExist) {
-            return res.status(400).send({ status: false, message: "longUrl already exists", data: longUrlExist })
+            return res.status(201).send({ status: true, message: "longUrl already exists", data: longUrlExist })
         }
 
 
